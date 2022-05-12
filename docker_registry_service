@@ -1,0 +1,27 @@
+Requierments !!!
+---------------------------
+You need two keys  [ reg.key , reg.cert ]  which are our certificate files, private key and certifcate ( full chain ) in order
+Your nodes that want to run registry should have label registry=true      ( docker node update --label-add  registry=true  (node_name)  ) 
+You need to create a  htpasswd file format to support authentication   ( Optional )
+
+
+
+Create Service !!!
+---------------------------
+docker service create \
+--name registry \
+--secret reg.key \
+--secret reg.cert \
+--constraint 'node.labels.registry==true' \
+--mount type=bind,src=/mnt/registry,dst=/var/lib/registry \
+-e REGISTRY_HTTP_ADDR=0.0.0.0:5000 \
+-e REGISTRY_HTTP_TLS_CERTIFICATE=/run/secrets/reg.cert \
+-e REGISTRY_HTTP_TLS_KEY=/run/secrets/reg.key \
+--config src=htpasswd,target=/auth/htpasswd \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+--publish published=5000,target=5000 \
+--network registry-ui_registry-ui-net \
+--replicas 1 \
+registry:latest
